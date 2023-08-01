@@ -1,0 +1,6 @@
+distributions*csv
+capital*csv
+
+__pycache__/
+*.py[cod]
+*$py.class
