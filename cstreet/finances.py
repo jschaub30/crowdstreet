@@ -31,5 +31,10 @@ class Portfolio():
             csv_file = csv.DictReader(fid, delimiter=delimiter)
             for line in csv_file:
                 assert "Capital Contribution Amount" in line, fname
+                LOGGER.debug(
+                    f"Adding {line['Capital Contribution Amount']} transaction " +
+                    f"from sponsor={line['Sponsor']!r} " +
+                    f"on offering={line['Offering']!r} "
+                )
                 self.offerings.add(line["Offering"])
                 self.sponsors.add(line["Sponsor"])
