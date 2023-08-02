@@ -1,6 +1,6 @@
 # Crowdstreet
 
-Read and analyze crowdstreet reports
+Read and analyze [Crowdstreet](https://www.crowdstreet.com/) reports.
 
 ## Prerequisites
 
@@ -19,3 +19,7 @@ then
 ```bash
 make test
 ```
+
+## Crowdstreet setup
+1. Download the "Capital Contribution" CSV report
+2. Download the "Distributions" CSV report
