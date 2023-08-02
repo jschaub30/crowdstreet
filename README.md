@@ -6,7 +6,7 @@ Read and analyze [Crowdstreet](https://www.crowdstreet.com/) reports.
 
 - python
 - pyenv (optional)
-- make
+- make (optional)
 
 ## Setup using pyenv
 
@@ -18,6 +18,10 @@ pip install -r requirements-tests.txt
 then
 ```bash
 make test
+```
+or
+```bash
+pytest
 ```
 
 ## Crowdstreet setup

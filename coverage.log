@@ -1,14 +1,61 @@
 ============================= test session starts ==============================
 platform darwin -- Python 3.8.11, pytest-7.4.0, pluggy-1.2.0
 rootdir: /Users/schaubj/work/jschaub30/crowdstreet
-collected 1 item
+collected 2 items
 
-test/test_finances.py .                                                  [100%]
+test/test_finances.py FF                                                 [100%]
 
-============================== 1 passed in 0.01s ===============================
+=================================== FAILURES ===================================
+__________________________________ test_init ___________________________________
+
+    def test_init():
+        """
+        Initialize a Portfolio with capital contribution report
+        """
+        with pytest.raises(Exception):
+            init_fn = "test/data/distributions.tsv"
+            portfolio = Portfolio(init_fn)
+    
+        init_fn = "test/data/contributions.tsv"
+        portfolio = Portfolio(init_fn)
+        assert len(portfolio.sponsors) == 2
+        assert len(portfolio.offerings) == 2
+    
+>       assert portfolio.capital_balance() == 21000
+E       assert 0 == 21000
+E        +  where 0 = <bound method Portfolio.capital_balance of <cstreet.finances.Portfolio object at 0x10f608b80>>()
+E        +    where <bound method Portfolio.capital_balance of <cstreet.finances.Portfolio object at 0x10f608b80>> = <cstreet.finances.Portfolio object at 0x10f608b80>.capital_balance
+
+test/test_finances.py:27: AssertionError
+______________________________ test_distributions ______________________________
+
+    def test_distributions():
+        """
+        Add distributions from distribution report
+        """
+        init_fn = "test/data/contributions.tsv"
+        portfolio = Portfolio(init_fn)
+    
+        with pytest.raises(Exception):
+            portfolio.add_distributions(init_fn)
+    
+        dist_fn = "test/data/distributions.tsv"
+        portfolio.add_distributions(dist_fn)
+    
+        assert len(portfolio.transactions()) == 6
+>       assert portfolio.capital_balance() == 21000 - 400
+E       assert 0 == (21000 - 400)
+E        +  where 0 = <bound method Portfolio.capital_balance of <cstreet.finances.Portfolio object at 0x10f62c580>>()
+E        +    where <bound method Portfolio.capital_balance of <cstreet.finances.Portfolio object at 0x10f62c580>> = <cstreet.finances.Portfolio object at 0x10f62c580>.capital_balance
+
+test/test_finances.py:52: AssertionError
+=========================== short test summary info ============================
+FAILED test/test_finances.py::test_init - assert 0 == 21000
+FAILED test/test_finances.py::test_distributions - assert 0 == (21000 - 400)
+============================== 2 failed in 0.03s ===============================
 Name                    Stmts   Miss  Cover   Missing
 -----------------------------------------------------
-cstreet/finances.py        22      0   100%
-test/test_finances.py      15      0   100%
+cstreet/finances.py        39      2    95%   66, 68
+test/test_finances.py      31      7    77%   28-35
 -----------------------------------------------------
-TOTAL                      37      0   100%
+TOTAL                      70      9    87%
