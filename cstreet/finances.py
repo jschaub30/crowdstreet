@@ -88,6 +88,7 @@ class Portfolio:
         self.offerings = set()
         self.investing_entities = set()
         self._transactions = []
+        self.start_date = date.today()
         with open(fname, "r", encoding=ENCODING) as fid:
             LOGGER.info(f"Reading contribution data from {fname!r}")
             if fname.endswith("tsv"):
@@ -111,6 +112,8 @@ class Portfolio:
                 if txn.id in ids:
                     LOGGER.warning(f"Skipping duplicate transaction: {txn}")
                     continue
+                if txn.date < self.start_date:
+                    self.start_date = txn.date
                 self._transactions.append(txn)
 
     def read_distributions(self, fname):
@@ -213,6 +216,8 @@ class Portfolio:
         investing_entity:  str
         sponsor:           str
         offering:          str
+        start_date:        datetime.date Only include trasacations up after this date
+                           (inclusive)
         end_date:          datetime.date Only include trasacations up until this date
                            (inclusive)
         """
@@ -220,11 +225,15 @@ class Portfolio:
         for attr in ("investing_entity", "sponsor", "offering"):
             if attr in kwargs and kwargs.get(attr) is not None:
                 txns = [t for t in txns if getattr(t, attr) == kwargs.get(attr)]
+        if "start_date" in kwargs and kwargs.get("start_date"):
+            start_date = kwargs.get("start_date")
+        else:
+            start_date = self.start_date
         if "end_date" in kwargs and kwargs.get("end_date"):
             end_date = kwargs.get("end_date")
         else:
             end_date = date.today()
-        txns = [t for t in txns if t.date <= end_date]
+        txns = [t for t in txns if t.date >= start_date and t.date <= end_date]
         return txns
 
     HEADER = [
@@ -235,10 +244,11 @@ class Portfolio:
         "Total Distributed",
         "Return of Capital",
         "Return on Capital",
-        "As of date",
+        "Start Date",
+        "End Date",
     ]
 
-    def _summary(self, verbose, end_date):
+    def _summary(self, verbose, start_date, end_date):
         """
         Return portfolio summary as list
 
@@ -249,10 +259,14 @@ class Portfolio:
           2:  summarize each offering individually
         """
         rows = []
-        if end_date:
-            datestr = end_date.strftime("%Y-%m-%d")
+        if start_date:
+            start_str = start_date.strftime("%Y-%m-%d")
         else:
-            datestr = date.today().strftime("%Y-%m-%d")
+            start_str = self.start_date.strftime("%Y-%m-%d")
+        if end_date:
+            end_str = end_date.strftime("%Y-%m-%d")
+        else:
+            end_str = date.today().strftime("%Y-%m-%d")
         if verbose == 0:
             entities = [None]
             offerings = [None]
@@ -284,10 +298,10 @@ class Portfolio:
                 )
                 entity = "ALL" if not entity else entity
                 offering = "ALL" if not offering else offering
-                rows.append([entity, offering, cc, cb, dist, rofc, ronc, datestr])
+                rows.append([entity, offering, cc, cb, dist, rofc, ronc, start_str, end_str])
         return rows
 
-    def save_summary(self, fname, delimiter="\t", verbose=2, end_date=None):
+    def save_summary(self, fname, delimiter="\t", verbose=2, start_date=None, end_date=None):
         """
         Save portfolio summary to delimited file
 
@@ -301,7 +315,7 @@ class Portfolio:
           1:  summarize each investment entity individually
           2:  summarize each offering individually
         """
-        rows = [self.HEADER] + self._summary(verbose, end_date)
+        rows = [self.HEADER] + self._summary(verbose, start_date, end_date)
         Path(fname).parent.mkdir(parents=True, exist_ok=True)
         with open(fname, "w", encoding=ENCODING) as fid:
             csv_file = csv.writer(
