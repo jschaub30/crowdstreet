@@ -26,7 +26,14 @@ class Transaction:
     - description
     - id
     - date: either "Period End Date" or "Transaction Date"
-    - amount: either "Capital Contribution" (negative) or "Total Distribution" (positive)
+
+    "Contribution"-specific properties:
+    - capital_contribution (negative number)
+
+    "Distribution"-specific properties:
+    - total_distribution
+    - return_on_capital
+    - return_of_capital
     """
 
     def __init__(self, line):
@@ -43,9 +50,8 @@ class Transaction:
             datestr = line["Transaction Date"]
             self.date = datetime.strptime(datestr, "%Y-%m-%d").date()
             # contributions are negative
-            self.amount = -float(line["Capital Contribution Amount"])
-            self.distribution = 0
-            amount = self.amount
+            self.capital = -float(line["Capital Contribution Amount"])
+            msg = f"Adding ${self.capital:11.02f} {self.transaction_type} "
         if "Return on Capital" in line:  # distribution
             self.transaction_type = "Distribution"
             self.description = line["Description"]
@@ -54,23 +60,19 @@ class Transaction:
             self.date = datetime.strptime(datestr, "%Y-%m-%d").date()
             datestr = line["Period End Date"]
             self.distribution_date = datetime.strptime(datestr, "%Y-%m-%d").date()
-            self.distribution = float(line["Total Distribution"])
+            self.total_distribution = float(line["Total Distribution"])
             val = line["Return of Capital"]
             self.return_of_capital = float(val) if val else 0
+            self.capital = self.return_of_capital
             val = line["Return on Capital"]
             self.return_on_capital = float(val) if val else 0
-            self.amount = self.return_of_capital
             val = line["Withholdings"]
             self.withholdings = float(val) if val else 0
-            amount = self.distribution
-        LOGGER.debug(
-            f"Adding ${amount:10.02f} {self.transaction_type} "
-            + f"from {self.sponsor!r} "
-            + f"on {self.offering!r} offering"
-        )
+            msg = f"Adding ${self.total_distribution:11.02f} {self.transaction_type} "
+        LOGGER.debug(msg + f"from {self.sponsor!r} on {self.offering!r} offering")
 
     def __repr__(self):
-        return f"{self.date}  {self.transaction_type}  ${self.amount:10.02f}"
+        return f"{self.date}  {self.transaction_type}  ${self.capital:10.02f}"
 
 
 class Portfolio:
@@ -113,7 +115,7 @@ class Portfolio:
 
     def read_distributions(self, fname):
         """
-        Add data from "Distributions" report
+        Add data from "Distributions" report to portfolio
         """
         with open(fname, "r", encoding=ENCODING) as fid:
             LOGGER.info(f"Adding distributions from {fname!r}")
@@ -153,13 +155,6 @@ class Portfolio:
     def capital_contributed(self, **kwargs):
         """
         Return capital contributed as float.
-        If no keyword args are provided, return all capital contributions
-
-        Keyword arguments:
-        investing_entity:  str
-        sponsor:           str
-        offering:          str
-        end_date:          datetime.date (inclusive)
         """
         txns = self.transactions(**kwargs)
         txns = [
@@ -167,39 +162,47 @@ class Portfolio:
             for t in self.transactions(**kwargs)
             if t.transaction_type == "Contribution"
         ]
-        return round(sum([t.amount for t in txns]), 2)
+        return round(sum([t.capital for t in txns]), 2)
 
     def capital_balance(self, **kwargs):
         """
         Return capital balance as float.
-        If no keyword args are provided, return full balance
-
-        Keyword arguments:
-        investing_entity:  str
-        sponsor:           str
-        offering:          str
-        end_date:          datetime.date (inclusive)
         """
         txns = self.transactions(**kwargs)
-        return round(sum([t.amount for t in txns]), 2)
+        return round(sum([t.capital for t in txns]), 2)
 
-    def distributions(self, **kwargs):
+    def return_of_capital(self, **kwargs):
         """
-        Return distributions as float.
-        If no keyword args are provided, return all distributions
-
-        Keyword arguments:
-        investing_entity:  str
-        sponsor:           str
-        offering:          str
-        end_date:          datetime.date (inclusive)
+        Return sum of capital returned float
         """
         txns = [
             t
             for t in self.transactions(**kwargs)
             if t.transaction_type == "Distribution"
         ]
-        return round(sum([t.amount for t in txns]), 2)
+        return round(sum([t.return_of_capital for t in txns]), 2)
+
+    def return_on_capital(self, **kwargs):
+        """
+        Return sum of return on capital as float
+        """
+        txns = [
+            t
+            for t in self.transactions(**kwargs)
+            if t.transaction_type == "Distribution"
+        ]
+        return round(sum([t.return_on_capital for t in txns]), 2)
+
+    def distributions(self, **kwargs):
+        """
+        Return sum of total distributions as float
+        """
+        txns = [
+            t
+            for t in self.transactions(**kwargs)
+            if t.transaction_type == "Distribution"
+        ]
+        return round(sum([t.total_distribution for t in txns]), 2)
 
     def transactions(self, **kwargs):
         """
@@ -230,6 +233,8 @@ class Portfolio:
         "Capital Contributed",
         "Capital Balance",
         "Total Distributed",
+        "Return of Capital",
+        "Return on Capital",
         "As of date",
     ]
 
@@ -249,33 +254,37 @@ class Portfolio:
         else:
             datestr = date.today().strftime("%Y-%m-%d")
         if verbose == 0:
-            cc = self.capital_contributed(end_date=end_date)
-            cb = self.capital_balance(end_date=end_date)
-            dist = self.distributions(end_date=end_date)
-            rows.append(["ALL", "ALL", cc, cb, dist, datestr])
+            entities = [None]
+            offerings = [None]
         elif verbose == 1:
-            for entity in self.investing_entities:
-                cc = self.capital_contributed(
-                    investing_entity=entity, end_date=end_date
-                )
-                cb = self.capital_balance(investing_entity=entity, end_date=end_date)
-                dist = self.distributions(investing_entity=entity, end_date=end_date)
-                rows.append([entity, "ALL", cc, cb, dist, datestr])
+            entities = sorted(self.investing_entities)
+            offerings = [None]
         elif verbose == 2:
-            for entity in self.investing_entities:
-                for offering in self.offerings:
-                    cc = self.capital_contributed(
-                        investing_entity=entity, offering=offering, end_date=end_date
-                    )
-                    if not cc:
-                        continue
-                    cb = self.capital_balance(
-                        investing_entity=entity, offering=offering, end_date=end_date
-                    )
-                    dist = self.distributions(
-                        investing_entity=entity, offering=offering, end_date=end_date
-                    )
-                    rows.append([entity, offering, cc, cb, dist, datestr])
+            entities = sorted(self.investing_entities)
+            offerings = sorted(self.offerings)
+
+        for entity in entities:
+            for offering in offerings:
+                cc = self.capital_contributed(
+                    investing_entity=entity, offering=offering, end_date=end_date
+                )
+                if not cc:
+                    continue
+                cb = self.capital_balance(
+                    investing_entity=entity, offering=offering, end_date=end_date
+                )
+                dist = self.distributions(
+                    investing_entity=entity, offering=offering, end_date=end_date
+                )
+                rofc = self.return_of_capital(
+                    investing_entity=entity, offering=offering, end_date=end_date
+                )
+                ronc = self.return_on_capital(
+                    investing_entity=entity, offering=offering, end_date=end_date
+                )
+                entity = "ALL" if not entity else entity
+                offering = "ALL" if not offering else offering
+                rows.append([entity, offering, cc, cb, dist, rofc, ronc, datestr])
         return rows
 
     def save_summary(self, fname, delimiter="\t", verbose=2, end_date=None):
