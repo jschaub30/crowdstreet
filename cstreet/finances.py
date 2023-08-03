@@ -304,6 +304,7 @@ class Portfolio:
     def save_summary(self, fname, delimiter="\t", verbose=2, start_date=None, end_date=None):
         """
         Save portfolio summary to delimited file
+        Returns number of rows (int) saved to file
 
         Positional arguments:
         fname:  str  filename
@@ -323,4 +324,5 @@ class Portfolio:
             )
             for row in rows:
                 csv_file.writerow(row)
-        LOGGER.info(f"Summary written to {fname!r}")
+        LOGGER.info(f"Summary with {len(rows)} rows written to {fname!r}")
+        return len(rows)

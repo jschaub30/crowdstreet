@@ -26,7 +26,7 @@ def test_init():
 
     assert len(portfolio.sponsors) == 2
     assert len(portfolio.offerings) == 2
-    assert len(portfolio.transactions()) == 4
+    assert len(portfolio.transactions()) == 5
 
 
 def test_capital_balance():
@@ -36,12 +36,12 @@ def test_capital_balance():
     init_fn = "test/data/contributions.tsv"
     portfolio = Portfolio(init_fn)
 
-    assert portfolio.capital_balance() == -23000
+    assert portfolio.capital_balance() == -26500
     assert portfolio.capital_balance(investing_entity="Alice") == -21000
     assert portfolio.capital_balance(investing_entity="Bob") == 0
-    assert portfolio.capital_balance(investing_entity="Alice and Bob") == -2000
-    assert portfolio.capital_balance(sponsor="ABC Holdings") == -13000
-    assert portfolio.capital_balance(offering="Apartment ABC") == -13000
+    assert portfolio.capital_balance(investing_entity="Alice and Bob") == -5500
+    assert portfolio.capital_balance(sponsor="ABC Holdings") == -16500
+    assert portfolio.capital_balance(offering="Apartment ABC") == -16500
 
 
 def test_date_filtering():
@@ -50,6 +50,8 @@ def test_date_filtering():
     """
     init_fn = "test/data/contributions.tsv"
     portfolio = Portfolio(init_fn)
+    start = date(2023, 1, 1)
+    assert len(portfolio.transactions(start_date=start)) == 1
     end = date(2022, 1, 31)
     assert len(portfolio.transactions(end_date=end)) == 2
 
@@ -80,10 +82,31 @@ def test_distributions():
 
     print(portfolio.transactions())
     print(len(portfolio.transactions()))
-    assert len(portfolio.transactions()) == 8
+    assert len(portfolio.transactions()) == 10
     print(portfolio.capital_balance())
-    assert portfolio.capital_balance() == -23000 + 400
+    assert portfolio.capital_balance() == -26100
 
+
+def test_summary():
+    """
+    Test save summary with options
+    """
+    init_fn = "test/data/contributions.tsv"
+    portfolio = Portfolio(init_fn)
+    dist_fn = "test/data/distributions.tsv"
+    portfolio.read_distributions(dist_fn)
+
+    sum_fn = "test/data/summary.tsv"
+    n1 = portfolio.save_summary(sum_fn, verbose=0)
+    n2 = portfolio.save_summary(sum_fn, verbose=1)
+    assert n2 > n1
+    n3 = portfolio.save_summary(sum_fn, verbose=2)
+    assert n3 > n2
+
+    start_date = date(2022, 1, 1)
+    end_date = date(2022, 11, 1)
+    n4 = portfolio.save_summary(sum_fn, start_date=start_date, end_date=end_date)
+    assert n4 == 4
 
 
 if __name__ == "__main__":  # pragma: no cover
