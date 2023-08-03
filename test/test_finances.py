@@ -50,8 +50,6 @@ def test_date_filtering():
     """
     init_fn = "test/data/contributions.tsv"
     portfolio = Portfolio(init_fn)
-    start = date(2022, 3, 15)
-    assert len(portfolio.transactions(start_date=start)) == 1
     end = date(2022, 1, 31)
     assert len(portfolio.transactions(end_date=end)) == 2
 

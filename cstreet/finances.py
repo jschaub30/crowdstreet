@@ -1,15 +1,16 @@
 """
 Classes for reading and analyzing Crowdstreet transactions
 """
-from datetime import datetime
+from datetime import datetime, date
 from logging import getLogger
+from pathlib import Path
 import csv
 
 LOGGER = getLogger()
 ENCODING = "utf8"
 
 
-class Transaction():
+class Transaction:
     """
     Transactions can be either:
     - contributions (investments)
@@ -27,6 +28,7 @@ class Transaction():
     - date: either "Period End Date" or "Transaction Date"
     - amount: either "Capital Contribution" (negative) or "Total Distribution" (positive)
     """
+
     def __init__(self, line):
         """
         line is a dict read from either a contribution report or distribution report
@@ -41,7 +43,7 @@ class Transaction():
             datestr = line["Transaction Date"]
             self.date = datetime.strptime(datestr, "%Y-%m-%d").date()
             # contributions are negative
-            self.amount = - float(line["Capital Contribution Amount"])
+            self.amount = -float(line["Capital Contribution Amount"])
             self.distribution = 0
             amount = self.amount
         if "Return on Capital" in line:  # distribution
@@ -62,16 +64,16 @@ class Transaction():
             self.withholdings = float(val) if val else 0
             amount = self.distribution
         LOGGER.debug(
-            f"Adding ${amount:10.02f} {self.transaction_type} " +
-            f"from {self.sponsor!r} " +
-            f"on {self.offering!r} offering"
+            f"Adding ${amount:10.02f} {self.transaction_type} "
+            + f"from {self.sponsor!r} "
+            + f"on {self.offering!r} offering"
         )
 
     def __repr__(self):
         return f"{self.date}  {self.transaction_type}  ${self.amount:10.02f}"
 
 
-class Portfolio():
+class Portfolio:
     """
     Portfolio of Crowdstreet investments
     """
@@ -96,8 +98,8 @@ class Portfolio():
             for line in csv_file:
                 if "Capital Contribution Amount" not in line:
                     raise Exception(
-                        f"{fname!r} does not appear to be a Crowdstreet Capital " +
-                        "Contribution report"
+                        f"{fname!r} does not appear to be a Crowdstreet Capital "
+                        + "Contribution report"
                     )
                 self.offerings.add(line["Offering"])
                 self.sponsors.add(line["Sponsor"])
@@ -127,11 +129,17 @@ class Portfolio():
                     raise Exception(
                         f"{fname!r} does not appear to be a Crowdstreet Distribution report"
                     )
-                if line['Sponsor'] not in self.sponsors:
-                    raise Exception(f"Sponsor {line['Sponsor']!r} not one of {self.sponsors}")
-                if line['Offering'] not in self.offerings:
-                    raise Exception(f"Offering={line['Offering']!r} not one of {self.offerings}")
-                if line['Investing Entity'] not in self.investing_entities:  # pragma: no cover
+                if line["Sponsor"] not in self.sponsors:
+                    raise Exception(
+                        f"Sponsor {line['Sponsor']!r} not one of {self.sponsors}"
+                    )
+                if line["Offering"] not in self.offerings:
+                    raise Exception(
+                        f"Offering={line['Offering']!r} not one of {self.offerings}"
+                    )
+                if (
+                    line["Investing Entity"] not in self.investing_entities
+                ):  # pragma: no cover
                     raise Exception(
                         f"Entity {line['Investing Entity']!r} not one of {self.investing_entities}"
                     )
@@ -142,44 +150,154 @@ class Portfolio():
                     continue
                 self._transactions.append(txn)
 
-
     def capital_contributed(self, **kwargs):
-        """ Return capital balance """
+        """
+        Return capital contributed as float.
+        If no keyword args are provided, return all capital contributions
+
+        Keyword arguments:
+        investing_entity:  str
+        sponsor:           str
+        offering:          str
+        end_date:          datetime.date (inclusive)
+        """
         txns = self.transactions(**kwargs)
-        txns = [t for t in self.transactions(**kwargs) if t.transaction_type == "Contribution"]
+        txns = [
+            t
+            for t in self.transactions(**kwargs)
+            if t.transaction_type == "Contribution"
+        ]
         return round(sum([t.amount for t in txns]), 2)
 
     def capital_balance(self, **kwargs):
-        """ Return capital balance """
+        """
+        Return capital balance as float.
+        If no keyword args are provided, return full balance
+
+        Keyword arguments:
+        investing_entity:  str
+        sponsor:           str
+        offering:          str
+        end_date:          datetime.date (inclusive)
+        """
         txns = self.transactions(**kwargs)
         return round(sum([t.amount for t in txns]), 2)
 
     def distributions(self, **kwargs):
-        txns = [t for t in self.transactions(**kwargs) if t.transaction_type == "Distribution"]
+        """
+        Return distributions as float.
+        If no keyword args are provided, return all distributions
+
+        Keyword arguments:
+        investing_entity:  str
+        sponsor:           str
+        offering:          str
+        end_date:          datetime.date (inclusive)
+        """
+        txns = [
+            t
+            for t in self.transactions(**kwargs)
+            if t.transaction_type == "Distribution"
+        ]
         return round(sum([t.amount for t in txns]), 2)
 
     def transactions(self, **kwargs):
-        """ Return list of transactions in portfolio """
+        """
+        Return list of transactions in portfolio
+        If no keyword args are provided, return all transactions
+
+        Keyword arguments:
+        investing_entity:  str
+        sponsor:           str
+        offering:          str
+        end_date:          datetime.date Only include trasacations up until this date
+                           (inclusive)
+        """
         txns = self._transactions
         for attr in ("investing_entity", "sponsor", "offering"):
-            if attr in kwargs:
+            if attr in kwargs and kwargs.get(attr) is not None:
                 txns = [t for t in txns if getattr(t, attr) == kwargs.get(attr)]
-        if "start_date" in kwargs:
-            txns = [t for t in txns if t.date >= kwargs.get("start_date")]
-        if "end_date" in kwargs:
-            txns = [t for t in txns if t.date <= kwargs.get("end_date")]
+        if "end_date" in kwargs and kwargs.get("end_date"):
+            end_date = kwargs.get("end_date")
+        else:
+            end_date = date.today()
+        txns = [t for t in txns if t.date <= end_date]
         return txns
 
-    def summary(self):
+    HEADER = [
+        "Entity",
+        "Offering",
+        "Capital Contributed",
+        "Capital Balance",
+        "Total Distributed",
+        "As of date",
+    ]
+
+    def _summary(self, verbose, end_date):
         """
-        This mimics the table shown in the Crowdstreet dashboard
+        Return portfolio summary as list
+
+        Keyword arguments:
+        verbose:  int (default = 2)
+          0:  top level summary of total portfolio
+          1:  summarize each investment entity individually
+          2:  summarize each offering individually
         """
-        msg = f"{'TOTAL':80}\t${self.capital_contributed():12.2f}\n"
-        for entity in self.investing_entities:
-            msg += f"  {entity:78}\t${self.capital_contributed(investing_entity=entity):12.2f}\n"
-            for offering in self.offerings:
-                val = self.capital_contributed(investing_entity=entity, offering=offering)
-                if not val:
-                    continue
-                msg += f"    {offering:76}\t${val:12.2f}\n"
-        return msg
+        rows = []
+        if end_date:
+            datestr = end_date.strftime("%Y-%m-%d")
+        else:
+            datestr = date.today().strftime("%Y-%m-%d")
+        if verbose == 0:
+            cc = self.capital_contributed(end_date=end_date)
+            cb = self.capital_balance(end_date=end_date)
+            dist = self.distributions(end_date=end_date)
+            rows.append(["ALL", "ALL", cc, cb, dist, datestr])
+        elif verbose == 1:
+            for entity in self.investing_entities:
+                cc = self.capital_contributed(
+                    investing_entity=entity, end_date=end_date
+                )
+                cb = self.capital_balance(investing_entity=entity, end_date=end_date)
+                dist = self.distributions(investing_entity=entity, end_date=end_date)
+                rows.append([entity, "ALL", cc, cb, dist, datestr])
+        elif verbose == 2:
+            for entity in self.investing_entities:
+                for offering in self.offerings:
+                    cc = self.capital_contributed(
+                        investing_entity=entity, offering=offering, end_date=end_date
+                    )
+                    if not cc:
+                        continue
+                    cb = self.capital_balance(
+                        investing_entity=entity, offering=offering, end_date=end_date
+                    )
+                    dist = self.distributions(
+                        investing_entity=entity, offering=offering, end_date=end_date
+                    )
+                    rows.append([entity, offering, cc, cb, dist, datestr])
+        return rows
+
+    def save_summary(self, fname, delimiter="\t", verbose=2, end_date=None):
+        """
+        Save portfolio summary to delimited file
+
+        Positional arguments:
+        fname:  str  filename
+
+        Keyword arguments:
+        delimiter: str (default = "\t")
+        verbose:   int (default = 2)
+          0:  top level summary of total portfolio
+          1:  summarize each investment entity individually
+          2:  summarize each offering individually
+        """
+        rows = [self.HEADER] + self._summary(verbose, end_date)
+        Path(fname).parent.mkdir(parents=True, exist_ok=True)
+        with open(fname, "w", encoding=ENCODING) as fid:
+            csv_file = csv.writer(
+                fid, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_MINIMAL
+            )
+            for row in rows:
+                csv_file.writerow(row)
+        LOGGER.info(f"Summary written to {fname!r}")

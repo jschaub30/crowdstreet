@@ -5,10 +5,10 @@ collected 4 items
 
 test/test_finances.py ....                                               [100%]
 
-============================== 4 passed in 0.01s ===============================
+============================== 4 passed in 0.03s ===============================
 Name                    Stmts   Miss  Cover   Missing
 -----------------------------------------------------
-cstreet/finances.py        90      0   100%
-test/test_finances.py      53      0   100%
+cstreet/finances.py       137     37    73%   164-170, 197-202, 246-279, 295-303
+test/test_finances.py      51      0   100%
 -----------------------------------------------------
-TOTAL                     143      0   100%
+TOTAL                     188     37    80%
