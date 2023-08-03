@@ -53,3 +53,26 @@ start_date = date(2022, 1, 1)
 end_date = date(2022, 12, 31)
 portfolio.save_summary("/tmp/summary_by_offering_2022.tsv", start_date=start_date, end_date=end_date)
 ```
+
+### Analyzing individual transactions
+Analyze sponsors in 2022
+```python
+for offering in portfolio.offerings:
+    txns = portfolio.transactions(offering=offering, start_date=start_date, end_date=end_date)
+
+    if not txns:
+        continue
+
+    ronc = 0  # return on capital
+
+    for txn in txns:
+        if txn.transaction_type == "Distribution":
+            ronc += txn.return_on_capital
+
+    ronc = round(ronc, 2)
+    print(
+        f"Total return on capital from offering={offering!r} " + 
+        f"between {start_date} and {end_date} was ${ronc}"
+    )
+```
+

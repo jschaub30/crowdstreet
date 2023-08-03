@@ -1,14 +1,14 @@
 ============================= test session starts ==============================
 platform darwin -- Python 3.8.11, pytest-7.4.0, pluggy-1.2.0
 rootdir: /Users/schaubj/work/jschaub30/crowdstreet
-collected 5 items
+collected 6 items
 
-test/test_finances.py .....                                              [100%]
+test/test_finances.py ......                                             [100%]
 
-============================== 5 passed in 0.03s ===============================
+============================== 6 passed in 0.04s ===============================
 Name                    Stmts   Miss  Cover   Missing
 -----------------------------------------------------
-cstreet/finances.py       153      0   100%
-test/test_finances.py      68      0   100%
+cstreet/finances.py       158      0   100%
+test/test_finances.py      77      0   100%
 -----------------------------------------------------
-TOTAL                     221      0   100%
+TOTAL                     235      0   100%

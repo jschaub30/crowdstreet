@@ -34,6 +34,7 @@ class Transaction:
     - total_distribution
     - return_on_capital
     - return_of_capital
+    - withholdings
     """
 
     def __init__(self, line):
@@ -73,6 +74,29 @@ class Transaction:
 
     def __repr__(self):
         return f"{self.date}  {self.transaction_type}  ${self.capital:10.02f}"
+
+    HEADERS = [
+        "investing_entity",
+        "sponsor",
+        "offering",
+        "transaction_type",
+        "description",
+        "id",
+        "date",
+        "capital_contribution",
+        "total_distribution",
+        "return_on_capital",
+        "return_of_capital",
+        "withholdings",
+    ]
+
+    def headers(self, delimiter="\t"):
+        """ Return column headers as delimited string """
+        return delimiter.join([h.title().replace("_", " ") for h in self.HEADERS])
+
+    def to_tsv(self, delimiter="\t"):
+        """ Return transaction as delimited string """
+        return delimiter.join([str(getattr(self, h, "")) for h in self.HEADERS])
 
 
 class Portfolio:
@@ -298,10 +322,14 @@ class Portfolio:
                 )
                 entity = "ALL" if not entity else entity
                 offering = "ALL" if not offering else offering
-                rows.append([entity, offering, cc, cb, dist, rofc, ronc, start_str, end_str])
+                rows.append(
+                    [entity, offering, cc, cb, dist, rofc, ronc, start_str, end_str]
+                )
         return rows
 
-    def save_summary(self, fname, delimiter="\t", verbose=2, start_date=None, end_date=None):
+    def save_summary(
+        self, fname, delimiter="\t", verbose=2, start_date=None, end_date=None
+    ):
         """
         Save portfolio summary to delimited file
         Returns number of rows (int) saved to file

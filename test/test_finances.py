@@ -109,8 +109,24 @@ def test_summary():
     assert n4 == 4
 
 
+def test_transactions():
+    """
+    Test save summary with options
+    """
+    init_fn = "test/data/contributions.tsv"
+    portfolio = Portfolio(init_fn)
+    dist_fn = "test/data/distributions.tsv"
+    portfolio.read_distributions(dist_fn)
+    for idx, txn in enumerate(portfolio.transactions()):
+        if idx == 0:
+            print(txn.headers())
+        print(txn.to_tsv())
+
+
 if __name__ == "__main__":  # pragma: no cover
     test_init()
     test_capital_balance()
     test_date_filtering()
     test_distributions()
+    test_summary()
+    test_transactions()
