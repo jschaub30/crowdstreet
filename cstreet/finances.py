@@ -91,11 +91,11 @@ class Transaction:
     ]
 
     def headers(self, delimiter="\t"):
-        """ Return column headers as delimited string """
+        """Return column headers as delimited string"""
         return delimiter.join([h.title().replace("_", " ") for h in self.HEADERS])
 
     def to_tsv(self, delimiter="\t"):
-        """ Return transaction as delimited string """
+        """Return transaction as delimited string"""
         return delimiter.join([str(getattr(self, h, "")) for h in self.HEADERS])
 
 
@@ -179,9 +179,21 @@ class Portfolio:
                     continue
                 self._transactions.append(txn)
 
+    def capital_committed(self, **kwargs):
+        """
+        Return capital committed as float
+        """
+        txns = self.transactions(**kwargs)
+        txns = [
+            t
+            for t in self.transactions(**kwargs)
+            if t.transaction_type == "Contribution" and t.description != "Capital Call"
+        ]
+        return round(sum([t.capital for t in txns]), 2)
+
     def capital_contributed(self, **kwargs):
         """
-        Return capital contributed as float.
+        Return capital contributed as float
         """
         txns = self.transactions(**kwargs)
         txns = [
@@ -193,7 +205,7 @@ class Portfolio:
 
     def capital_balance(self, **kwargs):
         """
-        Return capital balance as float.
+        Return capital balance as float
         """
         txns = self.transactions(**kwargs)
         return round(sum([t.capital for t in txns]), 2)
@@ -264,6 +276,7 @@ class Portfolio:
         "Entity",
         "Sponsor",
         "Offering",
+        "Capital Committed",
         "Capital Contributed",
         "Capital Balance",
         "Total Distributed",
@@ -304,10 +317,13 @@ class Portfolio:
 
         for entity in entities:
             for offering in offerings:
-                cc = self.capital_contributed(
+                ccom = self.capital_committed(
                     investing_entity=entity, offering=offering, end_date=end_date
                 )
-                if not cc:
+                ccon = self.capital_contributed(
+                    investing_entity=entity, offering=offering, end_date=end_date
+                )
+                if not ccon:
                     continue
                 cb = self.capital_balance(
                     investing_entity=entity, offering=offering, end_date=end_date
@@ -327,7 +343,19 @@ class Portfolio:
                 if offering != "ALL":
                     sponsor = self.transactions(offering=offering)[0].sponsor
                 rows.append(
-                    [entity, sponsor, offering, cc, cb, dist, rofc, ronc, start_str, end_str]
+                    [
+                        entity,
+                        sponsor,
+                        offering,
+                        ccom,
+                        ccon,
+                        cb,
+                        dist,
+                        rofc,
+                        ronc,
+                        start_str,
+                        end_str,
+                    ]
                 )
         return rows
 

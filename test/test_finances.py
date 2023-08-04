@@ -134,7 +134,7 @@ def test_capital_calls():
         investing_entity="Alice", sponsor="ABC Holdings"
     )
 
-    assert contributed - committed == 1000
+    assert contributed - committed == -1000
 
 
 if __name__ == "__main__":  # pragma: no cover
