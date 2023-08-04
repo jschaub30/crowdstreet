@@ -123,6 +123,20 @@ def test_transactions():
         print(txn.to_tsv())
 
 
+def test_capital_calls():
+    """Test capital committed vs capital contributed"""
+    init_fn = "test/data/contributions.tsv"
+    portfolio = Portfolio(init_fn)
+    committed = portfolio.capital_committed(
+        investing_entity="Alice", sponsor="ABC Holdings"
+    )
+    contributed = portfolio.capital_contributed(
+        investing_entity="Alice", sponsor="ABC Holdings"
+    )
+
+    assert contributed - committed == 1000
+
+
 if __name__ == "__main__":  # pragma: no cover
     test_init()
     test_capital_balance()
@@ -130,3 +144,4 @@ if __name__ == "__main__":  # pragma: no cover
     test_distributions()
     test_summary()
     test_transactions()
+    test_capital_calls()
