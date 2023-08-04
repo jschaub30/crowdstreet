@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: class Portfolio</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><strong>crowdstreet.Portfolio</strong> = <a name="crowdstreet.Portfolio">class Portfolio</a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>crowdstreet.Portfolio(fname)<br>
+&nbsp;<br>
+Portfolio&nbsp;of&nbsp;Crowdstreet&nbsp;investments<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Portfolio-__init__"><strong>__init__</strong></a>(self, fname)</dt><dd><tt>Initialize&nbsp;portfolio&nbsp;with&nbsp;"Capital&nbsp;Contribution&nbsp;report"</tt></dd></dl>
+
+<dl><dt><a name="Portfolio-capital_balance"><strong>capital_balance</strong></a>(self, **kwargs)</dt><dd><tt>Return&nbsp;capital&nbsp;balance&nbsp;as&nbsp;float</tt></dd></dl>
+
+<dl><dt><a name="Portfolio-capital_committed"><strong>capital_committed</strong></a>(self, **kwargs)</dt><dd><tt>Return&nbsp;capital&nbsp;committed&nbsp;as&nbsp;float</tt></dd></dl>
+
+<dl><dt><a name="Portfolio-capital_contributed"><strong>capital_contributed</strong></a>(self, **kwargs)</dt><dd><tt>Return&nbsp;capital&nbsp;contributed&nbsp;as&nbsp;float</tt></dd></dl>
+
+<dl><dt><a name="Portfolio-distributions"><strong>distributions</strong></a>(self, **kwargs)</dt><dd><tt>Return&nbsp;sum&nbsp;of&nbsp;total&nbsp;distributions&nbsp;as&nbsp;float</tt></dd></dl>
+
+<dl><dt><a name="Portfolio-read_distributions"><strong>read_distributions</strong></a>(self, fname)</dt><dd><tt>Add&nbsp;data&nbsp;from&nbsp;"Distributions"&nbsp;report&nbsp;to&nbsp;portfolio</tt></dd></dl>
+
+<dl><dt><a name="Portfolio-return_of_capital"><strong>return_of_capital</strong></a>(self, **kwargs)</dt><dd><tt>Return&nbsp;sum&nbsp;of&nbsp;capital&nbsp;returned&nbsp;float</tt></dd></dl>
+
+<dl><dt><a name="Portfolio-return_on_capital"><strong>return_on_capital</strong></a>(self, **kwargs)</dt><dd><tt>Return&nbsp;sum&nbsp;of&nbsp;return&nbsp;on&nbsp;capital&nbsp;as&nbsp;float</tt></dd></dl>
+
+<dl><dt><a name="Portfolio-save_summary"><strong>save_summary</strong></a>(self, fname, delimiter='\t', verbose=2, start_date=None, end_date=None)</dt><dd><tt>Save&nbsp;portfolio&nbsp;summary&nbsp;to&nbsp;delimited&nbsp;file<br>
+Returns&nbsp;number&nbsp;of&nbsp;rows&nbsp;(int)&nbsp;saved&nbsp;to&nbsp;file<br>
+&nbsp;<br>
+Positional&nbsp;arguments:<br>
+fname:&nbsp;&nbsp;str&nbsp;&nbsp;filename<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+delimiter:&nbsp;str&nbsp;(default&nbsp;=&nbsp;"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")<br>
+verbose:&nbsp;&nbsp;&nbsp;int&nbsp;(default&nbsp;=&nbsp;2)<br>
+&nbsp;&nbsp;0:&nbsp;&nbsp;top&nbsp;level&nbsp;summary&nbsp;of&nbsp;total&nbsp;portfolio<br>
+&nbsp;&nbsp;1:&nbsp;&nbsp;summarize&nbsp;each&nbsp;investment&nbsp;entity&nbsp;individually<br>
+&nbsp;&nbsp;2:&nbsp;&nbsp;summarize&nbsp;each&nbsp;offering&nbsp;individually</tt></dd></dl>
+
+<dl><dt><a name="Portfolio-transactions"><strong>transactions</strong></a>(self, **kwargs)</dt><dd><tt>Return&nbsp;list&nbsp;of&nbsp;transactions&nbsp;in&nbsp;portfolio<br>
+If&nbsp;no&nbsp;keyword&nbsp;args&nbsp;are&nbsp;provided,&nbsp;return&nbsp;all&nbsp;transactions<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+investing_entity:&nbsp;&nbsp;str<br>
+sponsor:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str<br>
+offering:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str<br>
+start_date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;datetime.date&nbsp;Only&nbsp;include&nbsp;trasacations&nbsp;up&nbsp;after&nbsp;this&nbsp;date<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(inclusive)<br>
+end_date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;datetime.date&nbsp;Only&nbsp;include&nbsp;trasacations&nbsp;up&nbsp;until&nbsp;this&nbsp;date<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(inclusive)</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>HEADER</strong> = ['Entity', 'Sponsor', 'Offering', 'Capital Committed', 'Capital Contributed', 'Capital Balance', 'Total Distributed', 'Return of Capital', 'Return on Capital', 'Start Date', 'End Date']</dl>
+
+</td></tr></table>
+</body></html>

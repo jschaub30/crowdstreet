@@ -5,7 +5,7 @@ import logging
 from datetime import date
 import pytest
 
-from cstreet.finances import Portfolio
+from crowdstreet.finances import Portfolio
 
 LOG_LEVEL = logging.DEBUG
 logging.basicConfig(format="%(levelname)s:%(message)s", level=LOG_LEVEL)

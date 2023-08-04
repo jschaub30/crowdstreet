@@ -106,7 +106,7 @@ class Portfolio:
 
     def __init__(self, fname):
         """
-        Init with "Capital Contribution report"
+        Initialize portfolio with "Capital Contribution report"
         """
         self.sponsors = set()
         self.offerings = set()
