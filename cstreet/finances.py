@@ -262,6 +262,7 @@ class Portfolio:
 
     HEADER = [
         "Entity",
+        "Sponsor",
         "Offering",
         "Capital Contributed",
         "Capital Balance",
@@ -322,8 +323,11 @@ class Portfolio:
                 )
                 entity = "ALL" if not entity else entity
                 offering = "ALL" if not offering else offering
+                sponsor = "ALL"
+                if offering != "ALL":
+                    sponsor = self.transactions(offering=offering)[0].sponsor
                 rows.append(
-                    [entity, offering, cc, cb, dist, rofc, ronc, start_str, end_str]
+                    [entity, sponsor, offering, cc, cb, dist, rofc, ronc, start_str, end_str]
                 )
         return rows
 
