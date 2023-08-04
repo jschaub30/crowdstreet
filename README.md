@@ -81,5 +81,5 @@ for offering in portfolio.offerings:
 ```
 
 ## Python documentation
-- [Portfolio](doc/Portfolio.html)
-- [Transaction](doc/Transaction.html)
+- [Portfolio](doc/Portfolio.txt)
+- [Transaction](doc/Transaction.txt)

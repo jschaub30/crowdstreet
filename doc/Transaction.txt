@@ -1,0 +1,57 @@
+Help on class Transaction in crowdstreet:
+
+crowdstreet.Transaction = class Transaction(builtins.object)
+ |  crowdstreet.Transaction(line)
+ |  
+ |  Transactions can be either:
+ |  - contributions (investments)
+ |  - distributions, in 2 flavors:
+ |    - return ON capital
+ |    - return OF capital
+ |  
+ |  Common properties:
+ |  - sponsor
+ |  - offering
+ |  - investing_entity
+ |  - transaction_type ("Contribution" or "Distribution")
+ |  - description
+ |  - id
+ |  - date: either "Period End Date" or "Transaction Date"
+ |  
+ |  "Contribution"-specific properties:
+ |  - capital_contribution (negative number)
+ |  
+ |  "Distribution"-specific properties:
+ |  - total_distribution
+ |  - return_on_capital
+ |  - return_of_capital
+ |  - withholdings
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self, line)
+ |      line is a dict read from either a contribution report or distribution report
+ |  
+ |  __repr__(self)
+ |      Return repr(self).
+ |  
+ |  headers(self, delimiter='\t')
+ |      Return column headers as delimited string
+ |  
+ |  to_tsv(self, delimiter='\t')
+ |      Return transaction as delimited string
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data and other attributes defined here:
+ |  
+ |  HEADERS = ['investing_entity', 'sponsor', 'offering', 'transaction_typ...
+

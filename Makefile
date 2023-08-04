@@ -15,8 +15,11 @@ test:
 	-coverage run -m pytest test/ | tee coverage.log
 	coverage report -m | tee -a coverage.log
 
+docs:
+	pydoc crowdstreet.Portfolio > doc/Portfolio.txt
+	pydoc crowdstreet.Transaction > doc/Transaction.txt
+
 clean:
 	rm -rf `find . -name .cache`
 	rm -rf `find . -name .pytest_cache`
 	rm -rf `find . -name __pycache__`
-
