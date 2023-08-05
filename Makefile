@@ -17,7 +17,9 @@ test:
 
 docs:
 	pydoc crowdstreet.Portfolio > doc/Portfolio.txt
+	pydoc -w crowdstreet.Portfolio > doc/Portfolio.html
 	pydoc crowdstreet.Transaction > doc/Transaction.txt
+	pydoc -w crowdstreet.Transaction > doc/Transaction.html
 
 clean:
 	rm -rf `find . -name .cache`
