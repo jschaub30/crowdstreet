@@ -42,6 +42,8 @@ def test_capital_balance():
     assert portfolio.capital_balance(investing_entity="Alice and Bob") == -5500
     assert portfolio.capital_balance(sponsor="ABC Holdings") == -16500
     assert portfolio.capital_balance(offering="Apartment ABC") == -16500
+    with pytest.raises(Exception):
+        portfolio.capital_balance(unknown_arg="unknown")
 
 
 def test_date_filtering():
@@ -121,6 +123,8 @@ def test_transactions():
         if idx == 0:
             print(txn.headers())
         print(txn.to_tsv())
+    with pytest.raises(Exception):
+        portfolio.transactions(unknown_arg=1)
 
 
 def test_capital_calls():

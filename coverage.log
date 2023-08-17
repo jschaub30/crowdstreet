@@ -8,7 +8,8 @@ test/test_finances.py .......                                            [100%]
 ============================== 7 passed in 0.04s ===============================
 Name                      Stmts   Miss  Cover   Missing
 -------------------------------------------------------
-crowdstreet/finances.py     166      0   100%
-test/test_finances.py        83      0   100%
+crowdstreet/__init__.py       1      0   100%
+crowdstreet/finances.py     170      0   100%
+test/test_finances.py        87      0   100%
 -------------------------------------------------------
-TOTAL                       249      0   100%
+TOTAL                       258      0   100%

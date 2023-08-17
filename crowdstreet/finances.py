@@ -257,6 +257,10 @@ class Portfolio:
         end_date:          datetime.date Only include trasacations up until this date
                            (inclusive)
         """
+        allowed = ("investing_entity", "sponsor", "offering", "start_date", "end_date")
+        for key in kwargs:
+            if key not in allowed:
+                raise Exception(f"Unknown argument={key}")
         txns = self._transactions
         for attr in ("investing_entity", "sponsor", "offering"):
             if attr in kwargs and kwargs.get(attr) is not None:
