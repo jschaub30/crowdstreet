@@ -333,13 +333,13 @@ class Portfolio:
                     investing_entity=entity, offering=offering, end_date=end_date
                 )
                 dist = self.distributions(
-                    investing_entity=entity, offering=offering, end_date=end_date
+                    investing_entity=entity, offering=offering, start_date=start_date, end_date=end_date
                 )
                 rofc = self.return_of_capital(
-                    investing_entity=entity, offering=offering, end_date=end_date
+                    investing_entity=entity, offering=offering, start_date=start_date, end_date=end_date
                 )
                 ronc = self.return_on_capital(
-                    investing_entity=entity, offering=offering, end_date=end_date
+                    investing_entity=entity, offering=offering, start_date=start_date, end_date=end_date
                 )
                 entity = "ALL" if not entity else entity
                 offering = "ALL" if not offering else offering
