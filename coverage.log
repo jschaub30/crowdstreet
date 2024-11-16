@@ -1,15 +1,16 @@
 ============================= test session starts ==============================
-platform darwin -- Python 3.8.11, pytest-7.4.0, pluggy-1.2.0
+platform darwin -- Python 3.10.14, pytest-8.3.3, pluggy-1.5.0
 rootdir: /Users/schaubj/work/jschaub30/crowdstreet
-collected 7 items
+plugins: dash-2.17.0
+collected 8 items
 
-test/test_finances.py .......                                            [100%]
+test/test_finances.py ........                                           [100%]
 
-============================== 7 passed in 0.03s ===============================
+============================== 8 passed in 0.05s ===============================
 Name                      Stmts   Miss  Cover   Missing
 -------------------------------------------------------
 crowdstreet/__init__.py       1      0   100%
-crowdstreet/finances.py     170      0   100%
-test/test_finances.py        87      0   100%
+crowdstreet/finances.py     183      0   100%
+test/test_finances.py        91      0   100%
 -------------------------------------------------------
-TOTAL                       258      0   100%
+TOTAL                       275      0   100%

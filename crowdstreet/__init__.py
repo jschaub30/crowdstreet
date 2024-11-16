@@ -1,1 +1,7 @@
-from .finances import Portfolio, Transaction
+from .finances import (
+    Portfolio,
+    Transaction,
+    PortfolioException,
+    DistributionException,
+    UnknownTransactionArgument,
+)

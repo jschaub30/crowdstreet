@@ -1,11 +1,18 @@
 """
 Unit tests
 """
+
 import logging
 from datetime import date
 import pytest
 
-from crowdstreet.finances import Portfolio
+from crowdstreet.finances import (
+    Portfolio,
+    PortfolioException,
+    DistributionException,
+    TransactionException,
+    UnknownTransactionArgument,
+)
 
 LOG_LEVEL = logging.DEBUG
 logging.basicConfig(format="%(levelname)s:%(message)s", level=LOG_LEVEL)
@@ -15,7 +22,7 @@ def test_init():
     """
     Initialize a Portfolio with capital contribution report
     """
-    with pytest.raises(Exception):
+    with pytest.raises(PortfolioException):
         init_fn = "test/data/distributions.tsv"
         portfolio = Portfolio(init_fn)
 
@@ -42,7 +49,7 @@ def test_capital_balance():
     assert portfolio.capital_balance(investing_entity="Alice and Bob") == -5500
     assert portfolio.capital_balance(sponsor="ABC Holdings") == -16500
     assert portfolio.capital_balance(offering="Apartment ABC") == -16500
-    with pytest.raises(Exception):
+    with pytest.raises(UnknownTransactionArgument):
         portfolio.capital_balance(unknown_arg="unknown")
 
 
@@ -65,18 +72,18 @@ def test_distributions():
     init_fn = "test/data/contributions.tsv"
     portfolio = Portfolio(init_fn)
 
-    with pytest.raises(Exception):
+    with pytest.raises(DistributionException):
         portfolio.read_distributions(init_fn)
 
     dist_fn = "test/data/distributions.tsv"
 
     sponsor = portfolio.sponsors.pop()
-    with pytest.raises(Exception):
+    with pytest.raises(DistributionException):
         portfolio.read_distributions(dist_fn)
     portfolio.sponsors.add(sponsor)
 
     offering = portfolio.offerings.pop()
-    with pytest.raises(Exception):
+    with pytest.raises(DistributionException):
         portfolio.read_distributions(dist_fn)
     portfolio.offerings.add(offering)
 
@@ -87,6 +94,15 @@ def test_distributions():
     assert len(portfolio.transactions()) == 10
     print(portfolio.capital_balance())
     assert portfolio.capital_balance() == -26100
+
+
+def test_bad_contributions():
+    """
+    Test for bad format of contributions data input
+    """
+    init_fn = "test/data/bad_contributions.tsv"
+    with pytest.raises(TransactionException):
+        portfolio = Portfolio(init_fn)
 
 
 def test_summary():
@@ -123,7 +139,7 @@ def test_transactions():
         if idx == 0:
             print(txn.headers())
         print(txn.to_tsv())
-    with pytest.raises(Exception):
+    with pytest.raises(UnknownTransactionArgument):
         portfolio.transactions(unknown_arg=1)
 
 
@@ -146,6 +162,7 @@ if __name__ == "__main__":  # pragma: no cover
     test_capital_balance()
     test_date_filtering()
     test_distributions()
+    test_bad_contributions()
     test_summary()
     test_transactions()
     test_capital_calls()

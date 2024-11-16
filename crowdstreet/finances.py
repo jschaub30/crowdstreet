@@ -1,13 +1,34 @@
 """
 Classes for reading and analyzing Crowdstreet transactions
 """
-from datetime import datetime, date
+
+import csv
+from datetime import date, datetime
 from logging import getLogger
 from pathlib import Path
-import csv
 
 LOGGER = getLogger()
 ENCODING = "utf8"
+TX_ARGS = ("investing_entity", "sponsor", "offering", "start_date", "end_date")
+
+
+class PortfolioException(Exception):
+    """Raised when initializing a Portfolio"""
+
+
+class DistributionException(Exception):
+    """Raised when reading a Distribution"""
+
+
+class TransactionException(Exception):
+    """Raised when reading a Transaction"""
+
+
+class UnknownTransactionArgument(Exception):
+    """Raised for bad transaction arguments"""
+
+    def __init__(self, arg):
+        super().__init__(f"Unknown argument {arg!r}: allowed arguments: {TX_ARGS}")
 
 
 class Transaction:
@@ -44,32 +65,39 @@ class Transaction:
         self.sponsor = line["Sponsor"]
         self.offering = line["Offering"]
         self.investing_entity = line["Investing Entity"]
-        if "Capital Contribution Amount" in line:  # contribution
-            self.transaction_type = "Contribution"
-            self.description = line["Transaction Description"]
-            self.id = int(line["Capital Contribution ID"])
-            datestr = line["Transaction Date"]
-            self.date = datetime.strptime(datestr, "%Y-%m-%d").date()
-            # contributions are negative
-            self.capital = -float(line["Capital Contribution Amount"])
-            msg = f"Adding ${self.capital:11.02f} {self.transaction_type} "
-        if "Return on Capital" in line:  # distribution
-            self.transaction_type = "Distribution"
-            self.description = line["Description"]
-            self.id = int(line["Distribution ID"])
-            datestr = line["Period End Date"]
-            self.date = datetime.strptime(datestr, "%Y-%m-%d").date()
-            datestr = line["Period End Date"]
-            self.distribution_date = datetime.strptime(datestr, "%Y-%m-%d").date()
-            self.total_distribution = float(line["Total Distribution"])
-            val = line["Return of Capital"]
-            self.return_of_capital = float(val) if val else 0
-            self.capital = self.return_of_capital
-            val = line["Return on Capital"]
-            self.return_on_capital = float(val) if val else 0
-            val = line["Withholdings"]
-            self.withholdings = float(val) if val else 0
-            msg = f"Adding ${self.total_distribution:11.02f} {self.transaction_type} "
+        msg = ""
+        try:
+            if "Capital Contribution Amount" in line:  # contribution
+                self.transaction_type = "Contribution"
+                self.description = line["Transaction Description"]
+                self.id = int(line["Capital Contribution ID"])
+                datestr = line["Transaction Date"]
+                self.date = datetime.strptime(datestr, "%Y-%m-%d").date()
+                # contributions are negative
+                self.capital = -float(line["Capital Contribution Amount"])
+                msg = f"Adding ${self.capital:11.02f} {self.transaction_type} "
+            if "Return on Capital" in line:  # distribution
+                self.transaction_type = "Distribution"
+                self.description = line["Description"]
+                self.id = int(line["Distribution ID"])
+                datestr = line["Period End Date"]
+                self.date = datetime.strptime(datestr, "%Y-%m-%d").date()
+                datestr = line["Period End Date"]
+                self.distribution_date = datetime.strptime(datestr, "%Y-%m-%d").date()
+                self.total_distribution = float(line["Total Distribution"])
+                val = line["Return of Capital"]
+                self.return_of_capital = float(val) if val else 0
+                self.capital = self.return_of_capital
+                val = line["Return on Capital"]
+                self.return_on_capital = float(val) if val else 0
+                val = line["Withholdings"]
+                self.withholdings = float(val) if val else 0
+                msg = (
+                    f"Adding ${self.total_distribution:11.02f} {self.transaction_type} "
+                )
+        except Exception as e:
+            msg = f"Problem reading this data: {line}\nerror={str(e)}"
+            raise TransactionException(msg) from e
         LOGGER.debug(msg + f"from {self.sponsor!r} on {self.offering!r} offering")
 
     def __repr__(self):
@@ -113,18 +141,16 @@ class Portfolio:
         self.investing_entities = set()
         self._transactions = []
         self.start_date = date.today()
-        with open(fname, "r", encoding=ENCODING) as fid:
+        with open(fname, encoding=ENCODING) as fid:
             LOGGER.info(f"Reading contribution data from {fname!r}")
+            delimiter = ","
             if fname.endswith("tsv"):
                 delimiter = "\t"
-            elif fname.endswith("csv"):  # pragma: no cover
-                delimiter = ","
-            else:  # pragma: no cover
-                raise Exception(f"Unknown extension for {fname!r}")
             csv_file = csv.DictReader(fid, delimiter=delimiter)
             for line in csv_file:
                 if "Capital Contribution Amount" not in line:
-                    raise Exception(
+                    # this is reading the header line
+                    raise PortfolioException(
                         f"{fname!r} does not appear to be a Crowdstreet Capital "
                         + "Contribution report"
                     )
@@ -144,32 +170,29 @@ class Portfolio:
         """
         Add data from "Distributions" report to portfolio
         """
-        with open(fname, "r", encoding=ENCODING) as fid:
+        with open(fname, encoding=ENCODING) as fid:
             LOGGER.info(f"Adding distributions from {fname!r}")
+            delimiter = ","
             if fname.endswith("tsv"):
                 delimiter = "\t"
-            elif fname.endswith("csv"):  # pragma: no cover
-                delimiter = ","
-            else:  # pragma: no cover
-                raise Exception(f"Unknown extension for {fname!r}")
             csv_file = csv.DictReader(fid, delimiter=delimiter)
             for line in csv_file:
                 if "Distribution ID" not in line:
-                    raise Exception(
+                    raise DistributionException(
                         f"{fname!r} does not appear to be a Crowdstreet Distribution report"
                     )
                 if line["Sponsor"] not in self.sponsors:
-                    raise Exception(
+                    raise DistributionException(
                         f"Sponsor {line['Sponsor']!r} not one of {self.sponsors}"
                     )
                 if line["Offering"] not in self.offerings:
-                    raise Exception(
+                    raise DistributionException(
                         f"Offering={line['Offering']!r} not one of {self.offerings}"
                     )
                 if (
                     line["Investing Entity"] not in self.investing_entities
                 ):  # pragma: no cover
-                    raise Exception(
+                    raise DistributionException(
                         f"Entity {line['Investing Entity']!r} not one of {self.investing_entities}"
                     )
                 ids = [t.id for t in self.transactions()]
@@ -257,10 +280,9 @@ class Portfolio:
         end_date:          datetime.date Only include trasacations up until this date
                            (inclusive)
         """
-        allowed = ("investing_entity", "sponsor", "offering", "start_date", "end_date")
         for key in kwargs:
-            if key not in allowed:
-                raise Exception(f"Unknown argument={key}")
+            if key not in TX_ARGS:
+                raise UnknownTransactionArgument(key)
         txns = self._transactions
         for attr in ("investing_entity", "sponsor", "offering"):
             if attr in kwargs and kwargs.get(attr) is not None:
@@ -333,13 +355,22 @@ class Portfolio:
                     investing_entity=entity, offering=offering, end_date=end_date
                 )
                 dist = self.distributions(
-                    investing_entity=entity, offering=offering, start_date=start_date, end_date=end_date
+                    investing_entity=entity,
+                    offering=offering,
+                    start_date=start_date,
+                    end_date=end_date,
                 )
                 rofc = self.return_of_capital(
-                    investing_entity=entity, offering=offering, start_date=start_date, end_date=end_date
+                    investing_entity=entity,
+                    offering=offering,
+                    start_date=start_date,
+                    end_date=end_date,
                 )
                 ronc = self.return_on_capital(
-                    investing_entity=entity, offering=offering, start_date=start_date, end_date=end_date
+                    investing_entity=entity,
+                    offering=offering,
+                    start_date=start_date,
+                    end_date=end_date,
                 )
                 entity = "ALL" if not entity else entity
                 offering = "ALL" if not offering else offering

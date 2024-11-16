@@ -6,7 +6,7 @@ import setuptools
 
 setuptools.setup(
     name='crowdstreet',
-    version='0.1.2',
+    version='0.1.3',
     author="Jeremy Schaub",
     description="Read and analyze Crowdstreet reports",
     url="https://github.com/jschaub30/crowdstreet",
